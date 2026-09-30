@@ -1,0 +1,106 @@
+#include <stdio.h>
+
+void imprime_arquivo(char *nomeArq){
+    FILE *arq; //declara ponteiro para arquivo
+    //abre arquivo para leitura
+    arq = fopen(nomeArq, "r");
+    if (arq != NULL){// checa se não deu erro na abertura do arquivo
+        char s[10];
+        fscanf(arq, "%s", s);
+        while (!feof(arq)) {//testa se chegou ao final do arquivo
+            printf("%s\n", s);
+            fscanf(arq, "%s", s);
+        }
+        fclose(arq); //fecha arquivo
+    }
+    else printf("Erro ao abrir arquivo\n");
+}
+
+void merge(char *nomeArq1, char *nomeArq2, char *nomeArqMerge) {
+    // Abre os arquivos de entrada para leitura e o de saída para escrita
+    FILE *arq1 = fopen(nomeArq1, "r");
+    FILE *arq2 = fopen(nomeArq2, "r");
+    FILE *arqMerge = fopen(nomeArqMerge, "w");
+
+    // Verifica se os arquivos foram abertos corretamente
+    if (arq1 == NULL || arq2 == NULL || arqMerge == NULL) {
+        printf("Erro ao abrir os arquivos.\n");
+        if (arq1) fclose(arq1);
+        if (arq2) fclose(arq2);
+        if (arqMerge) fclose(arqMerge);
+        return;
+    }
+
+    int num1, num2;
+    int leu1 = fscanf(arq1, "%d", &num1);
+    int leu2 = fscanf(arq2, "%d", &num2);
+
+    int ultimo_gravado;
+    int tem_ultimo = 0; // Flag para controlar se já gravamos algum número
+
+    // Enquanto houver números em ambos os arquivos
+    while (leu1 != EOF && leu2 != EOF) {
+        if (num1 < num2) {
+            // Grava num1 se for diferente do último gravado
+            if (!tem_ultimo || num1 != ultimo_gravado) {
+                fprintf(arqMerge, "%d\n", num1);
+                ultimo_gravado = num1;
+                tem_ultimo = 1;
+            }
+            leu1 = fscanf(arq1, "%d", &num1);
+        } 
+        else if (num1 > num2) {
+            // Grava num2 se for diferente do último gravado
+            if (!tem_ultimo || num2 != ultimo_gravado) {
+                fprintf(arqMerge, "%d\n", num2);
+                ultimo_gravado = num2;
+                tem_ultimo = 1;
+            }
+            leu2 = fscanf(arq2, "%d", &num2);
+        } 
+        else { // num1 == num2
+            // Grava apenas um deles se for diferente do último gravado
+            if (!tem_ultimo || num1 != ultimo_gravado) {
+                fprintf(arqMerge, "%d\n", num1);
+                ultimo_gravado = num1;
+                tem_ultimo = 1;
+            }
+            leu1 = fscanf(arq1, "%d", &num1);
+            leu2 = fscanf(arq2, "%d", &num2);
+        }
+    }
+
+    // Se ainda restarem números no arquivo 1, grava todos (evitando repetições)
+    while (leu1 != EOF) {
+        if (!tem_ultimo || num1 != ultimo_gravado) {
+            fprintf(arqMerge, "%d\n", num1);
+            ultimo_gravado = num1;
+            tem_ultimo = 1;
+        }
+        leu1 = fscanf(arq1, "%d", &num1);
+    }
+
+    // Se ainda restarem números no arquivo 2, grava todos (evitando repetições)
+    while (leu2 != EOF) {
+        if (!tem_ultimo || num2 != ultimo_gravado) {
+            fprintf(arqMerge, "%d\n", num2);
+            ultimo_gravado = num2;
+            tem_ultimo = 1;
+        }
+        leu2 = fscanf(arq2, "%d", &num2);
+    }
+
+    // Adiciona a linha em branco no final do arquivo, conforme solicitado no enunciado
+    fprintf(arqMerge, "\n");
+
+    // Fecha todos os arquivos
+    fclose(arq1);
+    fclose(arq2);
+    fclose(arqMerge);
+}
+
+int main(int argc, char **argv) {
+    merge("numeros1.txt", "numeros2.txt", "merge.txt");
+    imprime_arquivo("merge.txt");
+    return 0;
+}
